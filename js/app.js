@@ -868,6 +868,7 @@ function renderCollage() {
   const labelB      = document.getElementById('labelB').value;
   const labelSizePx = parseInt(document.getElementById('labelSize').value) || 48;
   const labelColor  = document.getElementById('labelColor').value;
+  const labelFont   = document.getElementById('labelFont').value;
   const labelPos    = document.getElementById('labelPos').value;
   const labelShadow = document.getElementById('labelShadow').checked;
 
@@ -933,7 +934,7 @@ function renderCollage() {
     if (!text.trim()) return;
     const { x, y, w, h } = region;
     const fs = Math.min(labelSizePx, Math.round(w / 4));
-    ctx.font = `700 ${fs}px "Roboto Flex", sans-serif`;
+    ctx.font = `700 ${fs}px "${labelFont}", sans-serif`;
 
     let tx, ty;
     const [vPos, hPos] = labelPos.split('-');

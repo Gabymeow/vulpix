@@ -1026,7 +1026,7 @@ input[type=color] {
 /* labels grid */
 .labels-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 16px;
   margin-bottom: 20px;
 }
@@ -1064,8 +1064,17 @@ input[type=color] {
   height: auto;
 }
 
+@media (max-width: 768px) {
+  .labels-grid { grid-template-columns: 1fr 1fr; }
+}
 @media (max-width: 600px) {
   .collage-slots { grid-template-columns: 1fr; }
   .labels-grid { grid-template-columns: 1fr; }
   .collage-slot { min-height: 140px; }
+}
+
+/* ─── COLLAGE FONT SELECTOR ─── */
+#labelFont {
+  height: 40px;
+  font-size: 14px;
 }

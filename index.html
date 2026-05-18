@@ -12,8 +12,8 @@
 <link rel="icon" href="img/fox.png" type="image/png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Roboto+Flex:opsz,wght@8..144,100..1000&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
+<link href="css/fonts.css" rel="stylesheet">
 </head>
 <body>
 
@@ -256,6 +256,23 @@
             </div>
           </div>
           <div class="label-group">
+            <div class="field-label" style="margin-bottom:6px">Шрифт</div>
+            <select id="labelFont" onchange="renderCollage()" style="font-size:14px">
+              <option value="Roboto Flex">Roboto — нейтральный</option>
+              <option value="Montserrat">Montserrat — современный</option>
+              <option value="Oswald">Oswald — узкий, жёсткий</option>
+              <option value="Bebas Neue">Bebas Neue — капс, кино</option>
+              <option value="Teko">Teko — технологичный</option>
+              <option value="Raleway">Raleway — элегантный</option>
+              <option value="Unbounded">Unbounded — широкий</option>
+              <option value="Nunito">Nunito — мягкий, круглый</option>
+              <option value="Playfair Display">Playfair Display — классика</option>
+              <option value="PT Serif">PT Serif — газетный</option>
+              <option value="Lobster">Lobster — рукописный</option>
+              <option value="Rubik+Dirt">Rubik Dirt — загадочный</option>
+            </select>
+          </div>
+          <div class="label-group">
             <div class="field-label" style="margin-bottom:6px">Цвет текста</div>
             <div class="color-row">
               <input type="color" id="labelColor" value="#ffffff" oninput="renderCollage()">
@@ -275,7 +292,7 @@
               <option value="top-center">Сверху по центру</option>
             </select>
           </div>
-          <div class="label-group" style="display:flex;align-items:flex-end;padding-bottom:2px">
+          <div class="label-group" style="display:flex;align-items:flex-start;padding-bottom:2px">
             <label class="toggle-row">
               <input type="checkbox" id="labelShadow" checked onchange="renderCollage()">
               <span class="field-label" style="margin:0;cursor:pointer">Тень у текста</span>
