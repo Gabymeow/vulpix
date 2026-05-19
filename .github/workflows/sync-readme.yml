@@ -3,7 +3,7 @@ name: Sync README to Notion
 on:
   push:
     branches:
-      - main  # Если у вас master, напишите здесь master
+      - main  # Если у вас ветка называется master, замените main на master
 
 jobs:
   sync:
@@ -13,8 +13,9 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Push README to Notion
-        uses: agonzalezl/readme-to-notion-action@master
+        uses: cvscarlos/markdown-to-notion-action@v1.0.4
         with:
-          file-path: './README.md'
-          notion-token: ${{ secrets.NOTION_TOKEN }}
-          notion-page-id: ${{ secrets.NOTION_PAGE_ID }}
+          # По документации этого плагина параметры пишутся так:
+          notion_token: ${{ secrets.NOTION_TOKEN }}
+          notion_page_id: ${{ secrets.NOTION_PAGE_ID }}
+          markdown_file_path: './README.md'
