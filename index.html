@@ -250,9 +250,9 @@
           <div class="label-group">
             <div class="field-label" style="margin-bottom:6px">Размер текста</div>
             <div class="quality-row">
-              <input type="range" id="labelSize" min="12" max="120" value="48"
-                oninput="document.getElementById('labelSizeVal').textContent=this.value+'px'; renderCollage()">
-              <div class="quality-val" id="labelSizeVal">48px</div>
+              <input type="range" id="labelSize" min="1" max="10" step="0.1" value="5"
+                oninput="document.getElementById('labelSizeVal').textContent=Math.round(this.value*10.8)+'px'; renderCollage()">
+              <div class="quality-val" id="labelSizeVal">54px</div>
             </div>
           </div>
           <div class="label-group">
@@ -269,7 +269,6 @@
               <option value="Playfair Display">Playfair Display — классика</option>
               <option value="PT Serif">PT Serif — газетный</option>
               <option value="Lobster">Lobster — рукописный</option>
-              <option value="Rubik+Dirt">Rubik Dirt — загадочный</option>
             </select>
           </div>
           <div class="label-group">

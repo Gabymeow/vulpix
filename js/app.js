@@ -856,124 +856,149 @@ function setLabelColor(hex) {
   renderCollage();
 }
 
-function renderCollage() {
-  const imgA = collageState.A;
-  const imgB = collageState.B;
-  if (!imgA || !imgB) return;
+// Список шрифтов коллажа — должен совпадать с options в select#labelFont
+const COLLAGE_FONTS = [
+  'Roboto Flex', 'Montserrat', 'Oswald', 'Bebas Neue', 'Teko',
+  'Raleway', 'Unbounded', 'Nunito', 'Playfair Display', 'PT Serif', 'Lobster'
+];
 
-  const dir         = document.getElementById('collageDir').value;
-  const divPx       = parseInt(document.getElementById('dividerSize').value) || 0;
-  const divColor    = document.getElementById('dividerColor').value;
-  const labelA      = document.getElementById('labelA').value;
-  const labelB      = document.getElementById('labelB').value;
-  const labelSizePx = parseInt(document.getElementById('labelSize').value) || 48;
-  const labelColor  = document.getElementById('labelColor').value;
-  const labelFont   = document.getElementById('labelFont').value;
-  const labelPos    = document.getElementById('labelPos').value;
-  const labelShadow = document.getElementById('labelShadow').checked;
+// Принудительно загружаем все шрифты сразу при старте страницы.
+// Без этого Canvas API получает fallback-шрифт, пока браузер не скачает нужный.
+// document.fonts.load() триггерит загрузку только если шрифт уже встречался в CSS;
+// здесь мы форсируем её явно для всех шрифтов коллажа.
+(function preloadCollageFonts() {
+  COLLAGE_FONTS.forEach(family => {
+    document.fonts.load(`700 48px "${family}"`).catch(() => {});
+  });
+})();
 
-  // ─── Вычисляем размер холста ───
-  // Оба изображения нормируем к одной высоте (горизонт) или ширине (вертикаль)
-  let canvasW, canvasH;
-  let drawAx, drawAy, drawAw, drawAh;
-  let drawBx, drawBy, drawBw, drawBh;
-
-  if (dir === 'horizontal') {
-    const h    = Math.max(imgA.naturalHeight, imgB.naturalHeight);
-    const scaleA = h / imgA.naturalHeight;
-    const scaleB = h / imgB.naturalHeight;
-    const wA = Math.round(imgA.naturalWidth  * scaleA);
-    const wB = Math.round(imgB.naturalWidth  * scaleB);
-    canvasW  = wA + divPx + wB;
-    canvasH  = h;
-    drawAx = 0;          drawAy = 0; drawAw = wA; drawAh = h;
-    drawBx = wA + divPx; drawBy = 0; drawBw = wB; drawBh = h;
-  } else {
-    const w    = Math.max(imgA.naturalWidth, imgB.naturalWidth);
-    const scaleA = w / imgA.naturalWidth;
-    const scaleB = w / imgB.naturalWidth;
-    const hA = Math.round(imgA.naturalHeight * scaleA);
-    const hB = Math.round(imgB.naturalHeight * scaleB);
-    canvasW  = w;
-    canvasH  = hA + divPx + hB;
-    drawAx = 0; drawAy = 0;          drawAw = w; drawAh = hA;
-    drawBx = 0; drawBy = hA + divPx; drawBw = w; drawBh = hB;
-  }
-
-  const canvas = document.getElementById('collageCanvas');
-  // Важно: не используем { alpha: false } — иначе сброс canvas.width даёт чёрный фон
-  canvas.width  = canvasW;
-  canvas.height = canvasH;
-  const ctx = canvas.getContext('2d');
-
-  // Белый фон для JPEG (у которого нет прозрачности)
-  const fmt = document.getElementById('collageFormat').value;
-  if (fmt === 'jpeg') {
+function _paintCollage(ctx, canvasW, canvasH, p) {
+  // Белый фон для JPEG
+  if (p.fmt === 'jpeg') {
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvasW, canvasH);
   }
 
-  // ─── Рисуем изображения ───
-  ctx.drawImage(imgA, drawAx, drawAy, drawAw, drawAh);
-  ctx.drawImage(imgB, drawBx, drawBy, drawBw, drawBh);
+  // Изображения
+  ctx.drawImage(p.imgA, p.drawAx, p.drawAy, p.drawAw, p.drawAh);
+  ctx.drawImage(p.imgB, p.drawBx, p.drawBy, p.drawBw, p.drawBh);
 
-  // ─── Разделитель ───
-  if (divPx > 0) {
-    ctx.fillStyle = divColor;
-    if (dir === 'horizontal') {
-      ctx.fillRect(drawAw, 0, divPx, canvasH);
+  // Разделитель
+  if (p.divPx > 0) {
+    ctx.fillStyle = p.divColor;
+    if (p.dir === 'horizontal') {
+      ctx.fillRect(p.drawAw, 0, p.divPx, canvasH);
     } else {
-      ctx.fillRect(0, drawAh, canvasW, divPx);
+      ctx.fillRect(0, p.drawAh, canvasW, p.divPx);
     }
   }
 
-  // ─── Подписи ───
-  const padding = Math.round(labelSizePx * 0.6);
+  // Подписи — размер шрифта как % от высоты холста (независимо от разрешения)
+  const fs      = Math.round(canvasH * p.labelSizePct / 100);
+  const padding = Math.round(fs * 1.2);
 
   function drawLabel(text, region) {
     if (!text.trim()) return;
     const { x, y, w, h } = region;
-    const fs = Math.min(labelSizePx, Math.round(w / 4));
-    ctx.font = `700 ${fs}px "${labelFont}", sans-serif`;
+    ctx.font         = `700 ${fs}px "${p.labelFont}", sans-serif`;
+    ctx.textBaseline = 'alphabetic';
 
-    let tx, ty;
-    const [vPos, hPos] = labelPos.split('-');
-    if (hPos === 'center') {
-      tx = x + w / 2;
-      ctx.textAlign = 'center';
-    } else {
-      tx = x + padding;
-      ctx.textAlign = 'left';
-    }
-    if (vPos === 'bottom') {
-      ty = y + h - padding;
-      ctx.textBaseline = 'alphabetic';
-    } else {
-      ty = y + padding + fs;
-      ctx.textBaseline = 'alphabetic';
-    }
+    const [vPos, hPos] = p.labelPos.split('-');
+    ctx.textAlign = hPos === 'center' ? 'center' : 'left';
+    const tx = hPos === 'center' ? x + w / 2 : x + padding;
+    const ty = vPos === 'bottom' ? y + h - padding : y + padding + fs;
 
-    if (labelShadow) {
+    if (p.labelShadow) {
       ctx.shadowColor   = 'rgba(0,0,0,0.7)';
-      ctx.shadowBlur    = fs * 0.3;
+      ctx.shadowBlur    = fs * 0.35;
       ctx.shadowOffsetX = 0;
       ctx.shadowOffsetY = fs * 0.05;
     }
-    ctx.fillStyle = labelColor;
+    ctx.fillStyle = p.labelColor;
     ctx.fillText(text, tx, ty);
     ctx.shadowColor = 'transparent';
     ctx.shadowBlur  = 0;
   }
 
-  drawLabel(labelA, { x: drawAx, y: drawAy, w: drawAw, h: drawAh });
-  drawLabel(labelB, { x: drawBx, y: drawBy, w: drawBw, h: drawBh });
+  drawLabel(p.labelA, { x: p.drawAx, y: p.drawAy, w: p.drawAw, h: p.drawAh });
+  drawLabel(p.labelB, { x: p.drawBx, y: p.drawBy, w: p.drawBw, h: p.drawBh });
+}
 
-  // ─── CSS-масштабирование для превью ───
-  const wrap   = document.querySelector('.collage-preview-wrap');
-  const maxW   = wrap ? wrap.clientWidth - 2 : 800;
-  const scale  = Math.min(1, maxW / canvasW);
-  canvas.style.width  = Math.round(canvasW * scale) + 'px';
-  canvas.style.height = Math.round(canvasH * scale) + 'px';
+function renderCollage() {
+  const imgA = collageState.A;
+  const imgB = collageState.B;
+  if (!imgA || !imgB) return;
+
+  const dir          = document.getElementById('collageDir').value;
+  const divPx        = parseInt(document.getElementById('dividerSize').value) || 0;
+  const divColor     = document.getElementById('dividerColor').value;
+  const labelA       = document.getElementById('labelA').value;
+  const labelB       = document.getElementById('labelB').value;
+  // Ползунок хранит % (1–10), отображается в px для удобства
+  const labelSizePct = parseInt(document.getElementById('labelSize').value) || 5;
+  const labelColor   = document.getElementById('labelColor').value;
+  const labelFont    = document.getElementById('labelFont').value;
+  const labelPos     = document.getElementById('labelPos').value;
+  const labelShadow  = document.getElementById('labelShadow').checked;
+  const fmt          = document.getElementById('collageFormat').value;
+
+  // Вычисляем размер холста
+  let canvasW, canvasH;
+  let drawAx, drawAy, drawAw, drawAh;
+  let drawBx, drawBy, drawBw, drawBh;
+
+  if (dir === 'horizontal') {
+    const h      = Math.max(imgA.naturalHeight, imgB.naturalHeight);
+    const scaleA = h / imgA.naturalHeight;
+    const scaleB = h / imgB.naturalHeight;
+    const wA     = Math.round(imgA.naturalWidth * scaleA);
+    const wB     = Math.round(imgB.naturalWidth * scaleB);
+    canvasW = wA + divPx + wB;
+    canvasH = h;
+    drawAx = 0; drawAy = 0; drawAw = wA; drawAh = h;
+    drawBx = wA + divPx; drawBy = 0; drawBw = wB; drawBh = h;
+  } else {
+    const w      = Math.max(imgA.naturalWidth, imgB.naturalWidth);
+    const scaleA = w / imgA.naturalWidth;
+    const scaleB = w / imgB.naturalWidth;
+    const hA     = Math.round(imgA.naturalHeight * scaleA);
+    const hB     = Math.round(imgB.naturalHeight * scaleB);
+    canvasW = w;
+    canvasH = hA + divPx + hB;
+    drawAx = 0; drawAy = 0; drawAw = w; drawAh = hA;
+    drawBx = 0; drawBy = hA + divPx; drawBw = w; drawBh = hB;
+  }
+
+  const p = {
+    imgA, imgB,
+    drawAx, drawAy, drawAw, drawAh,
+    drawBx, drawBy, drawBw, drawBh,
+    dir, divPx, divColor,
+    labelA, labelB, labelSizePct, labelFont, labelColor, labelPos, labelShadow, fmt
+  };
+
+  const canvas = document.getElementById('collageCanvas');
+  canvas.width  = canvasW;
+  canvas.height = canvasH;
+  const ctx = canvas.getContext('2d');
+
+  // Вычисляем fs для fontSpec — нужен для fonts.load()
+  const fs = Math.round(canvasH * labelSizePct / 100);
+
+  // Ждём загрузки выбранного шрифта, потом рисуем.
+  // document.fonts.load() резолвится сразу если шрифт уже в кэше браузера.
+  document.fonts.load(`700 ${fs}px "${labelFont}"`).then(() => {
+    canvas.width  = canvasW; // сброс canvas перед повторным рендером
+    canvas.height = canvasH;
+    _paintCollage(ctx, canvasW, canvasH, p);
+
+    // CSS-масштабирование превью
+    const wrap  = document.querySelector('.collage-preview-wrap');
+    const maxPW = wrap ? wrap.clientWidth - 2 : 800;
+    const sc    = Math.min(1, maxPW / canvasW);
+    canvas.style.width  = Math.round(canvasW * sc) + 'px';
+    canvas.style.height = Math.round(canvasH * sc) + 'px';
+  });
 }
 
 function downloadCollage() {
