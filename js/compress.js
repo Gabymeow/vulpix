@@ -136,8 +136,9 @@ function renderResults(results) {
   const totalNew  = results.reduce((s, r) => s + r.newSize,  0);
   const totalSave = Math.round((1 - totalNew / totalOrig) * 100);
 
-  const count  = results.length;
-  const plural = count === 1 ? 'файл' : count < 5 ? 'файла' : 'файлов';
+  const count    = results.length;
+  const plural   = count === 1 ? 'файл' : count < 5 ? 'файла' : 'файлов';
+  const btnLabel = count === 1 ? 'Скачать изображение' : 'Скачать архив';
 
   el.innerHTML = `
     <div class="results-section">
@@ -160,22 +161,49 @@ function renderResults(results) {
       }).join('')}
 
       <div class="actions-bar" style="margin-top:16px">
-        <button class="btn primary" onclick="downloadAll()">Скачать все</button>
+        <button class="btn primary" id="downloadAllBtn" onclick="downloadAll()">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M7 1v8M4 6l3 3 3-3M2 11h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          ${btnLabel}
+        </button>
         <button class="btn ghost" onclick="clearComp()">Сбросить</button>
       </div>
     </div>`;
 }
 
-function downloadAll() {
+async function downloadAll() {
   if (!window._compResults) return;
-  window._compResults.forEach((r, i) => {
-    setTimeout(() => {
-      const a = document.createElement('a');
-      a.href = r.url;
-      a.download = r.name;
-      a.click();
-    }, i * 300);
-  });
+  const results = window._compResults;
+  const btn = document.getElementById('downloadAllBtn');
+
+  // Single file — just download directly
+  if (results.length === 1) {
+    const a = document.createElement('a');
+    a.href = results[0].url;
+    a.download = results[0].name;
+    a.click();
+    return;
+  }
+
+  // Multiple files — pack into zip via JSZip
+  if (btn) { btn.disabled = true; btn.textContent = 'Упаковка…'; }
+
+  try {
+    const zip = new JSZip();
+    for (const r of results) {
+      const arrayBuf = await r.blob.arrayBuffer();
+      zip.file(r.name, arrayBuf);
+    }
+    const zipBlob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(zipBlob);
+    a.download = 'vulpixel_compressed.zip';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4 6l3 3 3-3M2 11h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Скачать архив`; }
+  }
 }
 
 // ─── UTILS ───
