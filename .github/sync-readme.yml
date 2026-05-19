@@ -1,0 +1,20 @@
+name: Sync README to Notion
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Push README to Notion
+        uses: marketplace/actions/readme-to-notion-action@v1
+        with:
+          file-path: './README.md'
+          notion-token: ${{ secrets.NOTION_TOKEN }}
+          notion-page-id: ${{ secrets.NOTION_PAGE_ID }}
