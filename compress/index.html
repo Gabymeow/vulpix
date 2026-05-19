@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Сжатие изображений — Vulpixel</title>
+  <meta name="description" content="Сжимай изображения без потери качества. WebP, JPEG, PNG. Пакетная обработка. Бесплатно, прямо в браузере.">
+  <meta name="theme-color" content="#0f0f0f">
+  <link rel="icon" href="../img/fox.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="../css/base.css">
+  <style>
+    .page-wrap {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: 0 32px;
+    }
+
+    /* ─── PAGE HERO ─── */
+    .page-hero {
+      padding: 48px 0 40px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 24px;
+      flex-wrap: wrap;
+      animation: fadeUp .4s ease both;
+    }
+
+    .page-hero-text {}
+
+    .page-eyebrow {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--accent);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .page-title {
+      font-size: clamp(26px, 4vw, 38px);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+    }
+
+    .page-title em { font-style: normal; color: var(--accent); }
+
+    .page-sub {
+      margin-top: 10px;
+      font-size: 14px;
+      color: var(--text2);
+      line-height: 1.6;
+      max-width: 420px;
+    }
+
+    .page-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-self: flex-end;
+    }
+
+    /* ─── WORKSPACE ─── */
+    .workspace {
+      padding-bottom: 80px;
+      animation: fadeUp .4s ease .06s both;
+    }
+
+    /* Drop zone */
+    .drop-zone-lg {
+      border: 1px dashed var(--border2);
+      border-radius: var(--r2);
+      padding: 64px 32px;
+      text-align: center;
+      cursor: pointer;
+      transition: all .2s;
+      background: var(--bg2);
+    }
+
+    .drop-zone-lg:hover, .drop-zone-lg.drag {
+      border-color: var(--accent);
+      background: rgba(255,127,80,0.04);
+    }
+
+    .drop-zone-lg input[type=file] { display: none; }
+
+    .dz-hints {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+
+    .dz-hint-tag {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text3);
+      padding: 3px 8px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+    }
+
+    /* File list */
+    .file-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .file-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      animation: slideIn .2s ease;
+    }
+
+    .file-thumb {
+      width: 44px; height: 44px;
+      object-fit: cover;
+      border-radius: 7px;
+      background: var(--bg3);
+      flex-shrink: 0;
+    }
+
+    .file-info { flex: 1; min-width: 0; }
+    .file-name {
+      font-size: 13px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .file-meta {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text3);
+      margin-top: 3px;
+    }
+
+    .file-rm {
+      background: none;
+      border: none;
+      color: var(--text3);
+      cursor: pointer;
+      font-size: 18px;
+      line-height: 1;
+      padding: 4px 6px;
+      border-radius: 6px;
+      transition: all .12s;
+      flex-shrink: 0;
+    }
+    .file-rm:hover { color: var(--red); background: rgba(255,92,92,0.1); }
+
+    /* Settings */
+    .settings-section {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--r2);
+      padding: 24px;
+      margin-top: 16px;
+    }
+
+    .settings-section-title {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text3);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .quality-wrap { margin-bottom: 0; }
+
+    .quality-hints {
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text3);
+      margin-top: 6px;
+    }
+
+    /* Results */
+    .results-section { margin-top: 24px; }
+
+    .results-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .results-title {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .results-summary {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--green);
+    }
+
+    .result-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      margin-bottom: 6px;
+      animation: slideIn .2s ease;
+    }
+
+    .result-info { flex: 1; min-width: 0; }
+    .result-name {
+      font-size: 13px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .result-meta {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text3);
+      margin-top: 3px;
+    }
+
+    .saving-badge {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 500;
+      padding: 3px 9px;
+      border-radius: 20px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .saving-badge.good { background: rgba(76,219,138,0.12); color: var(--green); }
+    .saving-badge.meh  { background: rgba(255,200,50,0.12);  color: #ffcc32; }
+
+    /* Actions bar */
+    .actions-bar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+
+    .actions-bar .btn { min-width: 0; }
+
+    @media (max-width: 768px) {
+      .page-wrap { padding: 0 16px; }
+      .page-hero { padding: 32px 0 28px; }
+      .page-pills { display: none; }
+      .drop-zone-lg { padding: 48px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="/" class="logo">
+    <img src="../img/fox.png" alt="Vulpixel">
+    <span class="logo-name">Vulpixel</span>
+  </a>
+  <nav class="header-nav">
+    <a href="/compress/" class="nav-link active">Сжатие</a>
+    <a href="/crop/" class="nav-link">Обрезка</a>
+  </nav>
+  <div class="header-badge">v0.4 · beta</div>
+</header>
+
+<main class="page-wrap">
+
+  <section class="page-hero">
+    <div class="page-hero-text">
+      <div class="page-eyebrow">// compress</div>
+      <h1 class="page-title">Сжатие без<br><em>потерь</em></h1>
+      <p class="page-sub">Пакетная оптимизация изображений. Выбери формат, качество и максимальную ширину — готово.</p>
+    </div>
+    <div class="page-pills">
+      <div class="pill green">✓ Приватно</div>
+      <div class="pill">WebP · JPEG · PNG</div>
+      <div class="pill">Пакетно</div>
+    </div>
+  </section>
+
+  <div class="workspace">
+
+    <!-- Drop Zone -->
+    <div class="drop-zone-lg" id="compDZ" onclick="document.getElementById('compInput').click()">
+      <input type="file" id="compInput" multiple accept="image/*" onchange="handleCompFiles(this.files)">
+      <div class="dz-icon">⬆</div>
+      <div class="dz-title">Перетащите изображения сюда</div>
+      <div class="dz-sub">или <span>выберите файлы</span> · PNG, JPG, WEBP</div>
+      <div class="dz-hints">
+        <span class="dz-hint-tag">PNG</span>
+        <span class="dz-hint-tag">JPEG</span>
+        <span class="dz-hint-tag">WebP</span>
+        <span class="dz-hint-tag">GIF</span>
+        <span class="dz-hint-tag">несколько файлов сразу</span>
+      </div>
+    </div>
+
+    <!-- File List -->
+    <div id="compFileList" class="file-list"></div>
+
+    <!-- Settings -->
+    <div id="compSettingsCard" class="settings-section hidden">
+      <div class="settings-section-title">Параметры сжатия</div>
+
+      <div class="settings-grid">
+        <div>
+          <div class="field-label">Формат вывода</div>
+          <select id="compFormat">
+            <option value="webp">WebP — лучший для web</option>
+            <option value="jpeg">JPEG — универсальный</option>
+            <option value="png">PNG — без потерь</option>
+          </select>
+        </div>
+        <div>
+          <div class="field-label">Максимальная ширина</div>
+          <select id="compMaxW">
+            <option value="0">Без изменений</option>
+            <option value="3840">3840px (4K)</option>
+            <option value="2560">2560px (2K)</option>
+            <option value="1920">1920px (Full HD)</option>
+            <option value="1280" selected>1280px (HD)</option>
+            <option value="800">800px (email)</option>
+            <option value="600">600px (миниатюра)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="quality-wrap">
+        <div class="field-label">Качество</div>
+        <div class="quality-row">
+          <input type="range" id="compQuality" min="30" max="95" value="82"
+            oninput="document.getElementById('qualVal').textContent = this.value + '%'">
+          <div class="quality-val" id="qualVal">82%</div>
+        </div>
+        <div class="quality-hints">
+          <span>Меньше размер</span>
+          <span>Лучше качество</span>
+        </div>
+      </div>
+
+      <!-- Progress -->
+      <div id="compProgWrap" class="prog-wrap hidden" style="margin-top:20px">
+        <div class="prog-label" id="compProgLabel">Обработка...</div>
+        <div class="prog-bar-bg"><div class="prog-bar" id="compProgBar"></div></div>
+      </div>
+
+      <div class="actions-bar" style="margin-top:20px">
+        <button class="btn primary" id="compBtn" onclick="runCompress()">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M7 1v8M4 6l3 3 3-3M2 11h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Сжать все файлы
+        </button>
+        <button class="btn ghost" onclick="clearComp()">Очистить</button>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div id="compResults"></div>
+
+  </div>
+</main>
+
+<!-- Hidden canvas for processing -->
+<canvas id="offscreen" style="display:none"></canvas>
+
+<footer>
+  <div class="footer-left">© 2025 Vulpixel · Файлы обрабатываются в браузере</div>
+  <div class="footer-right">
+    <span>🔒 Приватно</span>
+    <span>⚡ Быстро</span>
+    <span>∞ Бесплатно</span>
+  </div>
+</footer>
+
+<script src="../js/compress.js"></script>
+</body>
+</html>

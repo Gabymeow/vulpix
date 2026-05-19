@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Обрезка изображений — Vulpixel</title>
+  <meta name="description" content="Обрезай изображения под любое соотношение сторон. 16:9, 1:1, Story, A4 и другие пресеты. Прямо в браузере.">
+  <meta name="theme-color" content="#0f0f0f">
+  <link rel="icon" href="../img/fox.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="../css/base.css">
+  <style>
+    .page-wrap {
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: 0 32px;
+    }
+
+    /* ─── PAGE HERO ─── */
+    .page-hero {
+      padding: 48px 0 40px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 24px;
+      flex-wrap: wrap;
+      animation: fadeUp .4s ease both;
+    }
+
+    .page-eyebrow {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--accent);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .page-title {
+      font-size: clamp(26px, 4vw, 38px);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+    }
+    .page-title em { font-style: normal; color: var(--accent); }
+
+    .page-sub {
+      margin-top: 10px;
+      font-size: 14px;
+      color: var(--text2);
+      line-height: 1.6;
+      max-width: 420px;
+    }
+
+    .page-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-self: flex-end;
+    }
+
+    /* ─── WORKSPACE ─── */
+    .workspace { padding-bottom: 80px; animation: fadeUp .4s ease .06s both; }
+
+    /* Drop zone */
+    .drop-zone-lg {
+      border: 1px dashed var(--border2);
+      border-radius: var(--r2);
+      padding: 64px 32px;
+      text-align: center;
+      cursor: pointer;
+      transition: all .2s;
+      background: var(--bg2);
+    }
+    .drop-zone-lg:hover, .drop-zone-lg.drag {
+      border-color: var(--accent);
+      background: rgba(255,127,80,0.04);
+    }
+    .drop-zone-lg input[type=file] { display: none; }
+
+    /* ─── CROP EDITOR ─── */
+    .crop-layout {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 16px;
+      align-items: start;
+      margin-top: 16px;
+    }
+
+    /* Sidebar */
+    .crop-sidebar {}
+
+    .sidebar-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--r2);
+      padding: 20px;
+      margin-bottom: 12px;
+    }
+
+    .sidebar-title {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .preset-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+
+    .preset-btn {
+      font-family: var(--mono);
+      font-size: 11px;
+      padding: 7px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg3);
+      color: var(--text3);
+      cursor: pointer;
+      transition: all .13s;
+      text-align: center;
+    }
+    .preset-btn:hover { border-color: var(--border2); color: var(--text); }
+    .preset-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+
+    .custom-ratio-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 6px;
+      margin-top: 12px;
+    }
+    .custom-ratio-row .field-group { flex: 1; }
+    .ratio-sep {
+      font-size: 20px;
+      color: var(--text3);
+      padding-bottom: 8px;
+      flex-shrink: 0;
+    }
+
+    .img-info {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text3);
+      line-height: 1.8;
+    }
+    .img-info strong { color: var(--text2); font-weight: 500; }
+
+    .crop-size-info {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--accent);
+      margin-top: 8px;
+    }
+
+    /* Canvas area */
+    .canvas-area {}
+
+    .canvas-outer {
+      background: repeating-conic-gradient(#1a1a1a 0% 25%, #141414 0% 50%) 0 0 / 24px 24px;
+      border-radius: var(--r2);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      user-select: none;
+      position: relative;
+      contain: layout style paint;
+    }
+
+    #cropCanvas {
+      display: block;
+      cursor: crosshair;
+      max-width: 100%;
+      height: auto;
+      touch-action: none;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
+    }
+
+    .canvas-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+
+    /* ─── MOBILE: stack layout ─── */
+    @media (max-width: 768px) {
+      .page-wrap  { padding: 0 16px; }
+      .page-hero  { padding: 32px 0 28px; }
+      .page-pills { display: none; }
+      .drop-zone-lg { padding: 48px 20px; }
+
+      .crop-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .preset-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .canvas-outer {
+        max-height: min(55dvh, 500px);
+      }
+    }
+
+    @media (max-width: 480px) {
+      .preset-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    /* iOS fixes */
+    @supports (-webkit-touch-callout: none) {
+      .canvas-outer { max-height: min(55dvh, 500px); }
+      body { overscroll-behavior-y: none; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="/" class="logo">
+    <img src="../img/fox.png" alt="Vulpixel">
+    <span class="logo-name">Vulpixel</span>
+  </a>
+  <nav class="header-nav">
+    <a href="/compress/" class="nav-link">Сжатие</a>
+    <a href="/crop/" class="nav-link active">Обрезка</a>
+  </nav>
+  <div class="header-badge">v0.4 · beta</div>
+</header>
+
+<main class="page-wrap">
+
+  <section class="page-hero">
+    <div class="page-hero-text">
+      <div class="page-eyebrow">// crop</div>
+      <h1 class="page-title">Обрезка с<br><em>точностью</em></h1>
+      <p class="page-sub">Кадрируй под нужное соотношение сторон. Тяни углы, двигай рамку, скачивай результат.</p>
+    </div>
+    <div class="page-pills">
+      <div class="pill green">✓ Приватно</div>
+      <div class="pill">12 пресетов</div>
+      <div class="pill">Любое соотношение</div>
+    </div>
+  </section>
+
+  <div class="workspace">
+
+    <!-- Drop zone (shown initially) -->
+    <div class="drop-zone-lg" id="cropDZ" onclick="document.getElementById('cropInput').click()">
+      <input type="file" id="cropInput" accept="image/*" onchange="handleCropFile(this.files[0])">
+      <div class="dz-icon">✂</div>
+      <div class="dz-title">Загрузите изображение для обрезки</div>
+      <div class="dz-sub">или <span>выберите файл</span> · PNG, JPG, WEBP</div>
+    </div>
+
+    <!-- Crop editor (hidden until image loaded) -->
+    <div id="cropEditor" class="hidden">
+
+      <div class="crop-layout">
+
+        <!-- SIDEBAR -->
+        <div class="crop-sidebar">
+
+          <!-- Image info -->
+          <div class="sidebar-card">
+            <div class="sidebar-title">Изображение</div>
+            <div class="img-info" id="imgInfo">—</div>
+            <div class="crop-size-info" id="cropSzInfo"></div>
+          </div>
+
+          <!-- Presets -->
+          <div class="sidebar-card">
+            <div class="sidebar-title">Соотношение сторон</div>
+            <div class="preset-grid" id="presetGrid"></div>
+            <div class="custom-ratio-row">
+              <div class="field-group">
+                <div class="field-label">Ш</div>
+                <input type="number" id="ratioW" placeholder="16" min="1" oninput="applyCustomRatio()">
+              </div>
+              <div class="ratio-sep">:</div>
+              <div class="field-group">
+                <div class="field-label">В</div>
+                <input type="number" id="ratioH" placeholder="9" min="1" oninput="applyCustomRatio()">
+              </div>
+            </div>
+          </div>
+
+          <!-- Format & download -->
+          <div class="sidebar-card">
+            <div class="sidebar-title">Экспорт</div>
+            <div class="field-label">Формат</div>
+            <select id="cropFormat" style="margin-bottom:16px">
+              <option value="webp">WebP</option>
+              <option value="jpeg">JPEG</option>
+              <option value="png">PNG</option>
+            </select>
+
+            <div class="btn-row" style="flex-direction:column">
+              <button class="btn primary" onclick="downloadCrop()" style="width:100%">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M7 1v8M4 6l3 3 3-3M2 11h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Скачать кроп
+              </button>
+              <button class="btn ghost" onclick="resetCrop()" style="width:100%">Сбросить рамку</button>
+              <button class="btn ghost" onclick="loadNewFile()" style="width:100%">Другой файл</button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- CANVAS AREA -->
+        <div class="canvas-area">
+          <div class="canvas-outer" id="canvasOuter">
+            <canvas id="cropCanvas"></canvas>
+          </div>
+          <div class="canvas-actions">
+            <span style="font-family:var(--mono);font-size:11px;color:var(--text3)">
+              Тяни углы для изменения · двигай рамку за центр
+            </span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<canvas id="offscreen" style="display:none"></canvas>
+
+<footer>
+  <div class="footer-left">© 2025 Vulpixel · Файлы обрабатываются в браузере</div>
+  <div class="footer-right">
+    <span>🔒 Приватно</span>
+    <span>⚡ Быстро</span>
+    <span>∞ Бесплатно</span>
+  </div>
+</footer>
+
+<script src="../js/crop.js"></script>
+</body>
+</html>
