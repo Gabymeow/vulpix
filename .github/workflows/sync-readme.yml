@@ -13,7 +13,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Push README to Notion
-        uses: marketplace/actions/readme-to-notion-action@v1
+        uses: tryfabric/markdown-to-notion@v1
         with:
           file-path: './README.md'
           notion-token: ${{ secrets.NOTION_TOKEN }}
