@@ -15,7 +15,8 @@ jobs:
       - name: Push README to Notion
         uses: cvscarlos/markdown-to-notion-action@v1.0.4
         with:
-          # По документации этого плагина параметры пишутся так:
           notion_token: ${{ secrets.NOTION_TOKEN }}
           notion_page_id: ${{ secrets.NOTION_PAGE_ID }}
           markdown_file_path: './README.md'
+          # ДОБАВЛЯЕМ ЭТУ СТРОКУ:
+          github_token: ${{ secrets.GITHUB_TOKEN }} 
