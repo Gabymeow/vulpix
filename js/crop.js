@@ -92,13 +92,13 @@ function showEditor(img) {
       cropper.destroy();
     }
 
-    // Init Cropper.js (теперь размеры контейнера > 0, и рамка появится!)
+    const isMobile = window.matchMedia('(pointer: coarse)').matches;
     cropper = new Cropper(img, {
       viewMode: 1,             
       dragMode: 'move',        
       aspectRatio: 1,          
       autoCropArea: 0.85,
-      responsive: true,
+      responsive: isMobile,
       restore: false,
       guides: true,
       center: true,
