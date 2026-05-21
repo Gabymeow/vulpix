@@ -10,6 +10,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="../css/base.css">
+  <!-- Cropper.js -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css">
   <style>
     .page-wrap {
       max-width: var(--max-w);
@@ -88,9 +90,6 @@
       margin-top: 16px;
     }
 
-    /* Sidebar */
-    .crop-sidebar {}
-
     .sidebar-card {
       background: var(--bg2);
       border: 1px solid var(--border);
@@ -161,27 +160,48 @@
       margin-top: 8px;
     }
 
-    /* Canvas area */
+    /* ─── CROPPER AREA ─── */
     .canvas-area {}
 
-    .canvas-outer {
+    .cropper-wrapper {
       background: repeating-conic-gradient(#1a1a1a 0% 25%, #141414 0% 50%) 0 0 / 24px 24px;
       border-radius: var(--r2);
       border: 1px solid var(--border);
       overflow: hidden;
-      user-select: none;
-      position: relative;
-      contain: layout style paint;
+      max-height: 640px;
     }
 
-    #cropCanvas {
+    .cropper-wrapper img {
       display: block;
-      cursor: crosshair;
       max-width: 100%;
-      height: auto;
-      touch-action: none;
-      image-rendering: -webkit-optimize-contrast;
-      image-rendering: crisp-edges;
+    }
+
+    /* Override Cropper.js colors to match theme */
+    .cropper-view-box,
+    .cropper-face {
+      outline-color: var(--accent) !important;
+    }
+    .cropper-line,
+    .cropper-point {
+      background-color: var(--accent) !important;
+    }
+    .cropper-point {
+      width: 10px !important;
+      height: 10px !important;
+      border-radius: 2px !important;
+    }
+    .cropper-dashed {
+      border-color: rgba(255,127,80,0.4) !important;
+    }
+    .cropper-modal {
+      background: rgba(0,0,0,0.55) !important;
+    }
+    .cropper-center::before,
+    .cropper-center::after {
+      background-color: var(--accent) !important;
+    }
+    .cropper-bg {
+      background-image: none !important;
     }
 
     .canvas-actions {
@@ -189,9 +209,39 @@
       gap: 8px;
       margin-top: 12px;
       flex-wrap: wrap;
+      align-items: center;
     }
 
-    /* ─── MOBILE: stack layout ─── */
+    .canvas-hint {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text3);
+    }
+
+    /* Rotate / flip toolbar */
+    .transform-bar {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .icon-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      border-radius: var(--r2);
+      border: 1px solid var(--border);
+      background: var(--bg2);
+      color: var(--text2);
+      cursor: pointer;
+      font-size: 16px;
+      transition: all .13s;
+    }
+    .icon-btn:hover { border-color: var(--border2); color: var(--text); background: var(--bg3); }
+
+    /* ─── MOBILE ─── */
     @media (max-width: 768px) {
       .page-wrap  { padding: 0 16px; }
       .page-hero  { padding: 32px 0 28px; }
@@ -206,19 +256,13 @@
         grid-template-columns: repeat(3, 1fr);
       }
 
-      .canvas-outer {
+      .cropper-wrapper {
         max-height: min(55dvh, 500px);
       }
     }
 
     @media (max-width: 480px) {
       .preset-grid { grid-template-columns: repeat(2, 1fr); }
-    }
-
-    /* iOS fixes */
-    @supports (-webkit-touch-callout: none) {
-      .canvas-outer { max-height: min(55dvh, 500px); }
-      body { overscroll-behavior-y: none; }
     }
   </style>
 </head>
@@ -233,7 +277,7 @@
     <a href="/compress/" class="nav-link">Сжатие</a>
     <a href="/crop/" class="nav-link active">Обрезка</a>
   </nav>
-  <div class="header-badge">v0.4 · beta</div>
+  <div class="header-badge">v0.5 · beta</div>
 </header>
 
 <main class="page-wrap">
@@ -319,13 +363,17 @@
 
         <!-- CANVAS AREA -->
         <div class="canvas-area">
-          <div class="canvas-outer" id="canvasOuter">
-            <canvas id="cropCanvas"></canvas>
+          <div class="cropper-wrapper" id="cropperWrapper">
+            <img id="cropperImg" src="" alt="crop">
           </div>
           <div class="canvas-actions">
-            <span style="font-family:var(--mono);font-size:11px;color:var(--text3)">
-              Тяни углы для изменения · двигай рамку за центр
-            </span>
+            <div class="transform-bar">
+              <button class="icon-btn" onclick="cropper.rotate(-90)" title="Повернуть влево">↺</button>
+              <button class="icon-btn" onclick="cropper.rotate(90)"  title="Повернуть вправо">↻</button>
+              <button class="icon-btn" onclick="cropper.scaleX(cropper.getData().scaleX === -1 ? 1 : -1)" title="Отразить по горизонтали">↔</button>
+              <button class="icon-btn" onclick="cropper.scaleY(cropper.getData().scaleY === -1 ? 1 : -1)" title="Отразить по вертикали">↕</button>
+            </div>
+            <span class="canvas-hint">Тяни углы для изменения · двигай рамку за центр</span>
           </div>
         </div>
 
@@ -346,6 +394,7 @@
   </div>
 </footer>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 <script src="../js/crop.js"></script>
 </body>
 </html>
