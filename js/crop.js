@@ -95,22 +95,27 @@ function showEditor(img) {
     const isMobile = window.matchMedia('(pointer: coarse)').matches;
     cropper = new Cropper(img, {
       viewMode: 1,             
-      dragMode: 'move',        
+      dragMode: 'crop',        
       aspectRatio: 1,          
       autoCropArea: 0.85,
-      responsive: isMobile,
+      responsive: !isMobile,
       restore: false,
       guides: true,
       center: true,
       highlight: true,
       cropBoxMovable: true,
       cropBoxResizable: true,
-      toggleDragModeOnDblclick: true,
+      toggleDragModeOnDblclick: false,
+	    zoomable: false, 
+      zoomOnTouch: false,
+      zoomOnWheel: false,
+	    minCropBoxWidth: 20,
+      minCropBoxHeight: 20,
       crop(event) {
         const { width, height } = event.detail;
         updateCropInfo(Math.round(width), Math.round(height));
-      },
-    });
+  },
+});
 
     // Activate 1:1 preset button by default
     setActivePresetBtn(1);
